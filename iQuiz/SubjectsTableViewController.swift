@@ -11,6 +11,8 @@ import UIKit
 class SubjectsTableViewController: UITableViewController {
 
     var subjects = [[String:[String:String]]]()
+    var quizState = Quiz()
+    var questions = Questions()
 
     let math = [
         "image": "math icon",
@@ -88,6 +90,11 @@ class SubjectsTableViewController: UITableViewController {
         return cell
     }
     
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let subject = subjects[indexPath.row]
+        performSegue(withIdentifier: "QuestionViewController", sender: subject)
+    }
+    
 
     /*
     // Override to support conditional editing of the table view.
@@ -124,14 +131,31 @@ class SubjectsTableViewController: UITableViewController {
     }
     */
 
-    /*
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        if let destination = segue.destination as? QuestionViewController {
+            if let subject = sender as? [String:[String:String]] {
+                let topic = (subject["data"])?["subject"]
+                if topic == "Mathematics" {
+                    quizState.questionList = questions.math
+                } else if topic == "Marvel Super Heroes" {
+                    quizState.questionList = questions.hero
+                } else if topic == "Science" {
+                    quizState.questionList = questions.science
+                }
+                quizState.currQuizName = topic
+                quizState.currQuizQuestion = ""
+                quizState.currQuizQuestionNumber =  1
+                quizState.correctAnswer =  ""
+                quizState.totalCorrect =  0
+                quizState.totalQuestions =  quizState.questionList.count
+                quizState.answerPressed = false
+                quizState.answerCorrect = false
+                destination.quizState = quizState
+            }
+        }
     }
-    */
 
 }
