@@ -23,7 +23,7 @@ class FinishViewController: UIViewController {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        scoreLabel.text = "\(quizState.totalCorrect!) of \(quizState.totalQuestions!) correct"
+        scoreLabel.text = "\(quizState.totalCorrect) of \(quizState.totalQuestions) correct"
         if quizState.totalQuestions == quizState.totalCorrect {
             praiseLabel.text = "Amazing!"
         } else if quizState.totalQuestions - 1 == quizState.totalCorrect {

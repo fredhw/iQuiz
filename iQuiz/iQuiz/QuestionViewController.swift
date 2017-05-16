@@ -8,57 +8,21 @@
 
 import UIKit
 
-class QuestionViewController: UIViewController {
+class QuestionViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
 
+    let prefs = UserDefaults.standard
     var questions = [[String:[String:String]]]()
     var quizState = Quiz()
     var selectedAnswer = ""
-    
-    let math = [
-        "question": "What is 1 + 1?",
-        "one": "1",
-        "two": "2",
-        "three": "3",
-        "four": "4",
-        "correct": "2"
-    ]
-    
-    let hero = [
-        "question": "Who isn't a villain?",
-        "one": "Joker",
-        "two": "Dr. Octopus",
-        "three": "Batman",
-        "four": "Electro",
-        "correct": "Batman"
-    ]
-    
-    let science = [
-        "question": "What does Na stand for?",
-        "one": "Iron",
-        "two": "Sodium",
-        "three": "Magnesium",
-        "four": "Barium",
-        "correct": "Sodium"    ]
-    
-    func addSubjects() {
-        questions.append(["Mathematics": math])
-        questions.append(["Marvel Super Heroes": hero])
-        questions.append(["Science": science])
-    }
+    var correct = ""
+    var answers: [String] = []
     
     @IBOutlet weak var quizTitle: UINavigationItem!
     @IBOutlet weak var questionLabel: UILabel!
     @IBOutlet weak var submitButton: UIButton!
-    @IBOutlet weak var answerControl: UISegmentedControl!
-    
-    @IBAction func indexChanged(_ sender: UISegmentedControl) {
-        submitButton.isEnabled = true
-        selectedAnswer = answerControl.titleForSegment(at: answerControl.selectedSegmentIndex)!
-    }
-    
+    @IBOutlet weak var pickerView: UIPickerView!
     
     @IBAction func submitButton(_ sender: UIButton) {
-        let correct = quizState.questionList[quizState.currQuizQuestionNumber - 1]["correct"]
         if selectedAnswer == correct {
             quizState.answerCorrect = true
             quizState.totalCorrect = quizState.totalCorrect + 1
@@ -72,22 +36,51 @@ class QuestionViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        let chosen = self.prefs.object(forKey: "chosen") as? [String:Any]
         // Do any additional setup after loading the view.
-        quizTitle.title = quizState.currQuizName
+        quizTitle.title = chosen?["title"] as? String
         let questionIndex = quizState.currQuizQuestionNumber  - 1
-        let question = quizState.questionList[questionIndex]["question"]
-        questionLabel.text = "Question \(quizState.currQuizQuestionNumber!): \(question!)"
-        answerControl.setTitle(quizState.questionList[questionIndex]["one"], forSegmentAt: 0)
-        answerControl.setTitle(quizState.questionList[questionIndex]["two"], forSegmentAt: 1)
-        answerControl.setTitle(quizState.questionList[questionIndex]["three"], forSegmentAt: 2)
-        answerControl.setTitle(quizState.questionList[questionIndex]["four"], forSegmentAt: 3)
+        let questionList = chosen?["questions"] as? [[String:Any]]
+        quizState.totalQuestions = (questionList?.count)!
+        let question = questionList?[questionIndex]
+        let questionText = question?["text"] as? String
+        answers = (question?["answers"] as? [String])! // picker data
+        questionLabel.text = "Question \(quizState.currQuizQuestionNumber): \(questionText!)"
+        let correctIndex = question?["answer"] as? String
+        if correctIndex == "1" {
+            correct = (answers[0])
+        } else if correctIndex == "2" {
+            correct = (answers[1])
+        } else if correctIndex == "3" {
+            correct = (answers[2])
+        } else if correctIndex == "4" {
+            correct = (answers[3])
+        }
         submitButton.isEnabled = false
+        self.pickerView.delegate = self
+        self.pickerView.dataSource = self
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return answers[row]
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return answers.count
+    }
+    
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        submitButton.isEnabled = true
+        selectedAnswer = answers[row]
     }
     
     // MARK: - Navigation
@@ -95,8 +88,8 @@ class QuestionViewController: UIViewController {
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? AnswerViewController {
-            quizState.currQuizQuestion = quizState.questionList[quizState.currQuizQuestionNumber - 1]["question"]
-            quizState.correctAnswer = quizState.questionList[quizState.currQuizQuestionNumber - 1]["correct"]
+            quizState.currQuizQuestion = questionLabel.text!
+            quizState.correctAnswer = correct
             destination.quizState = quizState
         }
     }

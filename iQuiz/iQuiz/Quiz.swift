@@ -9,13 +9,13 @@
 import UIKit
 
 class Quiz: NSObject {
-    var currQuizName: String!
-    var currQuizQuestion: String!
-    var currQuizQuestionNumber: Int!
-    var correctAnswer: String!
-    var totalCorrect: Int!
-    var totalQuestions: Int!
+    var currQuizName: String = ""
+    var currQuizQuestion: String = ""
+    var currQuizQuestionNumber: Int = 1
+    var correctAnswer: String = ""
+    var totalCorrect: Int = 0
+    var totalQuestions: Int = 0
     var answerPressed: Bool = false
     var answerCorrect: Bool = false
-    var questionList: [[String:String]]!
+    var questionList: [[String: String]] = []
 }

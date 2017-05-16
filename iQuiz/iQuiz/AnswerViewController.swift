@@ -34,9 +34,9 @@ class AnswerViewController: UIViewController {
 
         // Do any additional setup after loading the view.
         quizTitle.title = quizState.currQuizName
-        questionLabel.text = "Question \(quizState.currQuizQuestionNumber!): \(quizState.currQuizQuestion!)"
+        questionLabel.text = "\(quizState.currQuizQuestion)"
         if quizState.answerCorrect == false {
-            verdictLabel.text = "Wrong! The answer was \(quizState.correctAnswer!)"
+            verdictLabel.text = "Wrong! The answer was \(quizState.correctAnswer)"
         } else {
             verdictLabel.text = "Correct!"
         }

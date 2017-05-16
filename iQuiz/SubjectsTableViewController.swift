@@ -7,73 +7,58 @@
 //
 
 import UIKit
+import Alamofire
 
 class SubjectsTableViewController: UITableViewController {
+    
+    var url = "https://tednewardsandbox.site44.com/questions.json"
+    let prefs = UserDefaults.standard
 
-    var subjects = [[String:[String:String]]]()
     var quizState = Quiz()
-    var questions = Questions()
-
-    let math = [
-        "image": "math icon",
-        "subject": "Mathematics",
-        "desc": "From basic algebra to calculus!"
-    ]
     
-    let hero = [
-        "image": "hero icon",
-        "subject": "Marvel Super Heroes",
-        "desc": "Make Stan Lee proud!"
-    ]
-    
-    let science = [
-        "image": "science icon",
-        "subject": "Science",
-        "desc": "Who needs Bill Nye?"
-    ]
-    
-    func addSubjects() {
-        subjects.append(["data": math])
-        subjects.append(["data": hero])
-        subjects.append(["data": science])
+    func updateNow() {
+        Alamofire.request(url).responseJSON{ response in
+            // debugPrint(response)
+            if let json = response.result.value as? [[String: Any]] {
+                self.prefs.set(json, forKey: "json")
+            }
+        }
+        self.tableView.reloadData()
     }
 
     
     @IBAction func settingsButton(_ sender: UIButton) {
-        let alert = UIAlertController(title: "Settings", message: "Settings go here", preferredStyle: .alert)
-        let alertAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-        alert.addAction(alertAction)
-        self.present(alert, animated: true, completion: nil)
+        let checkAction = UIAlertController(title: "Settings", message: "Shall you update?", preferredStyle: .alert)
+        checkAction.addTextField() { (textField) in
+            textField.placeholder = "\(self.url)"
+        }
+        let checkNow = UIAlertAction(title: "Check Now", style: .default, handler: { (action) in
+            self.updateNow()
+        })
+        let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        checkAction.addAction(checkNow)
+        checkAction.addAction(cancel)
+        self.present(checkAction, animated: true, completion: nil)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        updateNow()
         self.tableView.tableFooterView = UIView()
-        addSubjects()
-        // tableView.reloadData()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem()
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
         return 1
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return self.subjects.count
+        return (self.prefs.array(forKey: "json")?.count)!
     }
 
     
@@ -81,78 +66,28 @@ class SubjectsTableViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SubjectsCell", for: indexPath) as! SubjectsTableViewCell
 
         // Configure the cell...
-        let subject = self.subjects[indexPath.row]
-        let data = subject["data"]
-        cell.subjectLabel.text = data?["subject"]
-        cell.descLabel.text = data?["desc"]
-        cell.imageLabel.image = UIImage(named: (data?["image"])!)
+        let quizArray = self.prefs.array(forKey: "json")!
+        let subject = quizArray[indexPath.row] as! [String : Any]
+        cell.subjectLabel.text = subject["title"] as? String
+        cell.descLabel.text = subject["desc"] as? String
+        cell.imageLabel.image = UIImage(named: (cell.subjectLabel.text!))
 
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let subject = subjects[indexPath.row]
+        let quizArray = self.prefs.array(forKey: "json")!
+        let subject = quizArray[indexPath.row] as! [String : Any]
         performSegue(withIdentifier: "QuestionViewController", sender: subject)
     }
     
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? QuestionViewController {
-            if let subject = sender as? [String:[String:String]] {
-                let topic = (subject["data"])?["subject"]
-                if topic == "Mathematics" {
-                    quizState.questionList = questions.math
-                } else if topic == "Marvel Super Heroes" {
-                    quizState.questionList = questions.hero
-                } else if topic == "Science" {
-                    quizState.questionList = questions.science
-                }
-                quizState.currQuizName = topic
-                quizState.currQuizQuestion = ""
-                quizState.currQuizQuestionNumber =  1
-                quizState.correctAnswer =  ""
-                quizState.totalCorrect =  0
-                quizState.totalQuestions =  quizState.questionList.count
-                quizState.answerPressed = false
-                quizState.answerCorrect = false
+            if let subject = sender as? [String: Any] {
+                self.prefs.set(subject, forKey: "chosen")
                 destination.quizState = quizState
             }
         }
